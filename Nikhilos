@@ -1,0 +1,70 @@
+# include <stdio.h>
+# include <pthread.h>
+
+
+void *Producer();
+void *Consumer();
+
+struct sync {
+	int buffer;
+	int sem;
+} s;
+
+
+struct sync* init(){
+	return &s;
+}
+
+
+int main()
+{
+    pthread_t ptid,ctid;
+	s.sem=0;
+	s.buffer=0;
+  
+
+    pthread_create(&ptid,NULL,Producer,NULL);
+    pthread_create(&ctid,NULL,Consumer,NULL);
+
+    pthread_join(ptid,NULL);
+    pthread_join(ctid,NULL);
+
+
+    return 0;
+}
+
+void *Producer()
+{	
+	struct sync *m = init();
+    while(1)
+    {	
+    		int produced;
+    		printf("\n=====================================================================");
+    		printf("\nproducer started producing");
+			produced = rand();
+			m->buffer=produced;
+			printf("\nproducer produced:: %d\n",m->buffer);
+			printf("\nproducer informed consumer and waiting to be consumed");
+			m->sem=1;                                      
+			while(m->sem==1);
+			
+    }
+
+}
+
+void *Consumer()
+{	
+		struct sync *m = init();
+    while(1)
+    {		
+	int consumed;
+    	printf("\nconsumer waiting for indication from producer");
+		while(m->sem==0);
+		printf("\nconsumer recieved indication and started consuming");
+		consumed=m->buffer;
+		printf("\nconsumer consumed::%d",consumed);
+		m->sem=0;
+		printf("\nconsumer informed producer");
+		
+    }
+}
